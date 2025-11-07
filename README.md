@@ -355,4 +355,4 @@ MIT License - sinta-se livre para usar como referência.
 
 **Stack:** Node.js | React | TypeScript | Prisma | Express | Vite
 
-**Contato:** [Seu Nome] | [seu@email.com] | [LinkedIn]
+**Contato:** [Yuri Deiverson] | [yuriideiverson@gmail.com] | [[LinkedIn](https://www.linkedin.com/in/yuri-deiverson/)]
