@@ -340,6 +340,80 @@ export class MemberController {
         return res.status(400).json({ error: "E-mail é obrigatório" });
       }
 
+      // Verificar se é email de demonstração
+      const isDemoEmail = email === "demo@member.com";
+
+      // Se for demo, criar membro de demonstração automaticamente
+      if (isDemoEmail) {
+        let intention = await prisma.intention.findFirst({
+          where: { email: "demo@member.com" },
+        });
+
+        if (!intention) {
+          intention = await prisma.intention.create({
+            data: {
+              name: "Membro Demonstração",
+              email: "demo@member.com",
+              company: "Empresa Demo",
+              reason: "Conta de demonstração",
+              status: "APPROVED",
+            },
+          });
+        } else if (intention.status !== "APPROVED") {
+          await prisma.intention.update({
+            where: { id: intention.id },
+            data: { status: "APPROVED" },
+          });
+        }
+
+        let member = await prisma.member.findUnique({
+          where: { intentionId: intention.id },
+          include: {
+            intention: {
+              select: {
+                name: true,
+                email: true,
+                company: true,
+              },
+            },
+          },
+        });
+
+        if (!member) {
+          member = await prisma.member.create({
+            data: {
+              intentionId: intention.id,
+              phone: "(11) 99999-9999",
+              linkedin: "linkedin.com/in/demo",
+              profession: "Profissional de Demonstração",
+              segment: "Tecnologia",
+              companyDescription: "Empresa de demonstração do sistema",
+              isActive: true,
+            },
+            include: {
+              intention: {
+                select: {
+                  name: true,
+                  email: true,
+                  company: true,
+                },
+              },
+            },
+          });
+        }
+
+        return res.json({
+          message: "Login realizado com sucesso (Demo)",
+          data: {
+            memberId: member.id,
+            name: member.intention.name,
+            email: member.intention.email,
+            company: member.intention.company,
+            needsCompletion: false,
+          },
+        });
+      }
+
       // Buscar intenção pelo e-mail
       const intention = await prisma.intention.findFirst({
         where: {
