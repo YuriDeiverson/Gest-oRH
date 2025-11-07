@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo para intenções de participação
+model Intention {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  company   String
+  reason    String
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  token     String?  @unique // Token para cadastro completo após aprovação
+  
+  // Rastreamento de indicação
+  referredBy String? // ID do membro que indicou (se aplicável)
+  trackingStatus String? // Status de acompanhamento: NEW, IN_CONTACT, NEGOTIATING, CLOSED, REJECTED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relação com membro (após aprovação e cadastro completo)
+  member    Member?
+}
+
+// Modelo para membros completos
+model Member {
+  id          String   @id @default(uuid())
+  intentionId String   @unique
+  intention   Intention @relation(fields: [intentionId], references: [id])
+  
+  // Dados pessoais (opcionais inicialmente, completados após aprovação)
+  phone       String?
+  linkedin    String?
+  profession  String?
+  segment     String?
+  
+  // Dados da empresa
+  companyDescription String?
+  
+  // Status
+  isActive    Boolean  @default(true)
+  joinedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relações
+  indicationsGiven    Referral[] @relation("GivenReferrals")
+  indicationsReceived Referral[] @relation("ReceivedReferrals")
+  meetingsAsHost      OneToOneMeeting[] @relation("HostMeetings")
+  meetingsAsGuest     OneToOneMeeting[] @relation("GuestMeetings")
+  presences           Presence[]
+  thanks              Thank[]
+}
+
+// Sistema de Indicações/Referências
+model Referral {
+  id               String   @id @default(uuid())
+  giverId          String
+  giver            Member   @relation("GivenReferrals", fields: [giverId], references: [id])
+  receiverId       String
+  receiver         Member   @relation("ReceivedReferrals", fields: [receiverId], references: [id])
+  
+  // Dados da indicação
+  companyName      String
+  contactName      String
+  contactInfo      String
+  opportunity      String
+  status           String @default("NEW") // NEW, IN_CONTACT, NEGOTIATING, CLOSED, REJECTED
+  
+  // Metadata
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// Reuniões 1 a 1
+model OneToOneMeeting {
+  id        String   @id @default(uuid())
+  hostId    String
+  host      Member   @relation("HostMeetings", fields: [hostId], references: [id])
+  guestId   String
+  guest     Member   @relation("GuestMeetings", fields: [guestId], references: [id])
+  
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+// Controle de presença em reuniões
+model Meeting {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  
+  presences   Presence[]
+}
+
+model Presence {
+  id        String   @id @default(uuid())
+  meetingId String
+  meeting   Meeting  @relation(fields: [meetingId], references: [id])
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id])
+  
+  checkedIn Boolean  @default(false)
+  checkedAt DateTime?
+  
+  @@unique([meetingId, memberId])
+}
+
+// Agradecimentos públicos
+model Thank {
+  id          String   @id @default(uuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id])
+  
+  description String
+  value       Float?   // Valor do negócio (opcional)
+  createdAt   DateTime @default(now())
+}
+
+// Avisos e Comunicados
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  priority  String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Controle Financeiro - Mensalidades
+model Payment {
+  id          String   @id @default(uuid())
+  memberId    String
+  
+  amount      Float
+  dueDate     DateTime
+  paidAt      DateTime?
+  status      String   @default("PENDING") // PENDING, PAID, OVERDUE, CANCELLED
+  
+  referenceMonth String // Ex: "2024-01"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([memberId, referenceMonth])
+}
