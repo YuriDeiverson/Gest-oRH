@@ -76,7 +76,7 @@ app.use((req, res, next) => {
 
 // Root route
 app.get("/", (req, res) => {
-  res.json({ 
+  res.json({
     message: "Networking Platform API",
     status: "online",
     version: "1.0.0",
@@ -84,8 +84,8 @@ app.get("/", (req, res) => {
       health: "/health",
       intentions: "/intentions",
       members: "/members",
-      referrals: "/referrals"
-    }
+      referrals: "/referrals",
+    },
   });
 });
 
