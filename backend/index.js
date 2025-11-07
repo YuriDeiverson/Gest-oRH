@@ -118,7 +118,7 @@ try {
 } catch (error) {
   console.error("Error loading routes:", error);
   console.error("Stack:", error.stack);
-  
+
   // Fallback para qualquer rota
   app.use("*", (req, res) => {
     res.status(500).json({

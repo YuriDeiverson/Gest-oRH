@@ -24,6 +24,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@neondatabase/serverless": "^0.9.5",
+    "@prisma/adapter-neon": "^5.22.0",
     "@prisma/client": "^5.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
