@@ -15,10 +15,10 @@ const CompleteProfileNew: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const memberId = localStorage.getItem('memberId');
-  const memberName = localStorage.getItem('memberName');
-  const memberEmail = localStorage.getItem('memberEmail');
-  const memberCompany = localStorage.getItem('memberCompany');
+  const memberId = localStorage.getItem("memberId");
+  const memberName = localStorage.getItem("memberName");
+  const memberEmail = localStorage.getItem("memberEmail");
+  const memberCompany = localStorage.getItem("memberCompany");
 
   const [formData, setFormData] = useState<FormData>({
     phone: "",
@@ -62,7 +62,7 @@ const CompleteProfileNew: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
-        }
+        },
       );
 
       const data = await response.json();
@@ -89,7 +89,8 @@ const CompleteProfileNew: React.FC = () => {
           <div className="bg-linear-to-r from-primary-600 to-primary-700 text-white px-8 py-6">
             <h1 className="text-3xl font-bold mb-2">Complete seu Perfil</h1>
             <p className="text-primary-100">
-              Bem-vindo(a), <strong>{memberName}</strong>! Por favor, complete suas informações para acessar o sistema.
+              Bem-vindo(a), <strong>{memberName}</strong>! Por favor, complete
+              suas informações para acessar o sistema.
             </p>
           </div>
 
@@ -97,7 +98,11 @@ const CompleteProfileNew: React.FC = () => {
           <div className="p-8">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-start gap-3">
-                <svg className="w-5 h-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-5 h-5 shrink-0 mt-0.5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -110,18 +115,32 @@ const CompleteProfileNew: React.FC = () => {
 
             {/* Info Card */}
             <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 mb-8">
-              <h3 className="font-semibold text-gray-900 mb-3">Suas Informações Básicas</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Suas Informações Básicas
+              </h3>
               <div className="space-y-2 text-sm">
-                <p><span className="font-medium text-gray-700">Nome:</span> {memberName}</p>
-                <p><span className="font-medium text-gray-700">Email:</span> {memberEmail}</p>
-                <p><span className="font-medium text-gray-700">Empresa:</span> {memberCompany}</p>
+                <p>
+                  <span className="font-medium text-gray-700">Nome:</span>{" "}
+                  {memberName}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-700">Email:</span>{" "}
+                  {memberEmail}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-700">Empresa:</span>{" "}
+                  {memberCompany}
+                </p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Phone */}
               <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   Telefone <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -138,7 +157,10 @@ const CompleteProfileNew: React.FC = () => {
 
               {/* LinkedIn */}
               <div>
-                <label htmlFor="linkedin" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="linkedin"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   LinkedIn
                 </label>
                 <input
@@ -154,7 +176,10 @@ const CompleteProfileNew: React.FC = () => {
 
               {/* Profession */}
               <div>
-                <label htmlFor="profession" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="profession"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   Profissão <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -171,7 +196,10 @@ const CompleteProfileNew: React.FC = () => {
 
               {/* Segment */}
               <div>
-                <label htmlFor="segment" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="segment"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   Segmento de Atuação <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -188,7 +216,10 @@ const CompleteProfileNew: React.FC = () => {
 
               {/* Company Description */}
               <div>
-                <label htmlFor="companyDescription" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="companyDescription"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   Descrição da Empresa
                 </label>
                 <textarea
@@ -211,8 +242,19 @@ const CompleteProfileNew: React.FC = () => {
                 >
                   {submitting ? (
                     <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <svg
+                        className="animate-spin h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
                         <path
                           className="opacity-75"
                           fill="currentColor"

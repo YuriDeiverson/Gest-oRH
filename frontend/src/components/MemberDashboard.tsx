@@ -95,7 +95,7 @@ const MemberDashboardNew: React.FC = () => {
         segment: memberResult.data.segment,
       });
 
-      const membersResponse = await fetch("${API_URL}/members/public/list");
+      const membersResponse = await fetch(`${API_URL}/members/public/list`);
       if (membersResponse.ok) {
         const membersResult = await membersResponse.json();
         const mappedMembers = membersResult.data
