@@ -124,15 +124,21 @@ export class IntentionController {
     try {
       const { id } = req.params;
 
+      console.log(`🔍 Attempting to approve intention: ${id}`);
+
       const intention = await prisma.intention.findUnique({
         where: { id },
       });
 
       if (!intention) {
+        console.log(`❌ Intention not found: ${id}`);
         return res.status(404).json({ error: "Intenção não encontrada" });
       }
 
+      console.log(`📋 Intention status: ${intention.status}`);
+
       if (intention.status !== IntentionStatus.PENDING) {
+        console.log(`⚠️ Intention already processed. Status: ${intention.status}`);
         return res.status(400).json({
           error: "Apenas intenções pendentes podem ser aprovadas",
         });
@@ -144,6 +150,7 @@ export class IntentionController {
       });
 
       if (existingMember) {
+        console.log(`⚠️ Member already exists for intention: ${id}`);
         return res.status(400).json({
           error: "Já existe um membro criado para esta intenção",
         });
@@ -200,7 +207,10 @@ export class IntentionController {
       });
     } catch (error) {
       console.error("Error approving intention:", error);
-      res.status(500).json({ error: "Erro ao aprovar intenção" });
+      res.status(500).json({ 
+        error: "Erro ao aprovar intenção",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   }
 

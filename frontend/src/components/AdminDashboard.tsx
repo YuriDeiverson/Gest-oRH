@@ -66,8 +66,11 @@ export const AdminDashboardNew: React.FC = () => {
       setSuccessMessage("Intenção aprovada! Membro criado com sucesso.");
       await loadData();
       await loadStats(); // Recarregar estatísticas para atualizar contador
-    } catch {
-      setError("Erro ao aprovar intenção");
+    } catch (err) {
+      const errorMessage = (err as { response?: { data?: { error?: string } }; message?: string })?.response?.data?.error || 
+                          (err as Error)?.message || 
+                          "Erro ao aprovar intenção";
+      setError(errorMessage);
     }
   };
 
@@ -125,7 +128,7 @@ export const AdminDashboardNew: React.FC = () => {
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
             >
               Sair
             </button>
@@ -138,14 +141,14 @@ export const AdminDashboardNew: React.FC = () => {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
             <p className="text-sm text-red-800">{error}</p>
-            <button onClick={() => setError('')} className="text-red-600 hover:text-red-800">×</button>
+            <button onClick={() => setError('')} className="text-red-600 hover:text-red-800 cursor-pointer">×</button>
           </div>
         )}
 
         {successMessage && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex justify-between items-center">
             <p className="text-sm text-green-800">{successMessage}</p>
-            <button onClick={() => setSuccessMessage('')} className="text-green-600 hover:text-green-800">×</button>
+            <button onClick={() => setSuccessMessage('')} className="text-green-600 hover:text-green-800 cursor-pointer">×</button>
           </div>
         )}
 
@@ -188,7 +191,7 @@ export const AdminDashboardNew: React.FC = () => {
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
                 filter === status
                   ? 'bg-primary-600 text-white shadow-sm'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -239,13 +242,13 @@ export const AdminDashboardNew: React.FC = () => {
                     <div className="flex gap-3 pt-4 border-t border-gray-200">
                       <button
                         onClick={() => handleApprove(intention.id)}
-                        className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+                        className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors cursor-pointer"
                       >
                         Aprovar
                       </button>
                       <button
                         onClick={() => handleReject(intention.id)}
-                        className="flex-1 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors"
+                        className="flex-1 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors cursor-pointer"
                       >
                         Rejeitar
                       </button>

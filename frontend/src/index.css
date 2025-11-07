@@ -12,3 +12,8 @@
   --color-primary-800: #243b53;
   --color-primary-900: #102a43;
 }
+
+/* Global button cursor */
+button {
+  cursor: pointer;
+}

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/config";
 
 const MemberLoginNew: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const MemberLoginNew: React.FC = () => {
 
     try {
       // Verificar se o membro existe
-      const response = await fetch(`http://localhost:3001/api/members/login`, {
+      const response = await fetch(`${API_BASE_URL}/members/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
