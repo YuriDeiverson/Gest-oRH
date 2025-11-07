@@ -81,7 +81,7 @@ const MemberDashboardNew: React.FC = () => {
 
     try {
       const memberResponse = await fetch(
-        `http://localhost:3001/api/members/${memberId}/public`,
+        `${API_URL}/members/${memberId}/public`,
       );
       if (!memberResponse.ok)
         throw new Error("Erro ao carregar dados do membro");
@@ -95,8 +95,9 @@ const MemberDashboardNew: React.FC = () => {
         segment: memberResult.data.segment,
       });
 
-      // Buscar membros ativos
-      const membersResponse = await fetch(`${API_URL}/members/public/list`);
+      const membersResponse = await fetch(
+        "${API_URL}/members/public/list",
+      );
       if (membersResponse.ok) {
         const membersResult = await membersResponse.json();
         const mappedMembers = membersResult.data
@@ -191,7 +192,7 @@ const MemberDashboardNew: React.FC = () => {
     if (!memberId) return;
 
     try {
-      const response = await fetch(`${API_URL}/referrals`, {
+      const response = await fetch("${API_URL}/referrals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -231,11 +232,14 @@ const MemberDashboardNew: React.FC = () => {
     if (!memberId) return;
 
     try {
-      const response = await fetch(`${API_URL}/referrals/refer/${memberId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(indicationData),
-      });
+      const response = await fetch(
+        `${API_URL}/referrals/refer/${memberId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(indicationData),
+        },
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
