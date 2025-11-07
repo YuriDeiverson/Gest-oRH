@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { intentionService } from "../services/api";
+import { API_BASE_URL } from "../config/config";
 
 interface FormData {
   phone: string;
@@ -84,7 +85,7 @@ const MemberRegistrationNew: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/members/register/${token}`,
+        `${API_BASE_URL}/members/register/${token}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

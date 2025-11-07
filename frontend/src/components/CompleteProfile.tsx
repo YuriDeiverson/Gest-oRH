@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/config";
 
 interface FormData {
   phone: string;
@@ -56,7 +57,7 @@ const CompleteProfileNew: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/members/${memberId}/complete-profile`,
+        `${API_BASE_URL}/members/${memberId}/complete-profile`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
