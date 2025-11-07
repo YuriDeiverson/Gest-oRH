@@ -74,6 +74,21 @@ app.use((req, res, next) => {
   next();
 });
 
+// Root route
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Networking Platform API",
+    status: "online",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      intentions: "/intentions",
+      members: "/members",
+      referrals: "/referrals"
+    }
+  });
+});
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -93,7 +108,7 @@ try {
   app.use("/api/intentions", intentionRoutes);
   app.use("/api/members", memberRoutes);
   app.use("/api/referrals", referralRoutes);
-  
+
   // Rotas sem /api (para compatibilidade)
   app.use("/intentions", intentionRoutes);
   app.use("/members", memberRoutes);
