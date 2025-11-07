@@ -29,15 +29,18 @@ const MemberLoginNew: React.FC = () => {
         throw new Error(data.error || "Erro ao fazer login");
       }
 
+      // Compatibilidade: data.member (normal) ou data.data (demo)
+      const memberData = data.member || data.data;
+
       // Salvar dados do membro no localStorage
-      localStorage.setItem("memberId", data.member.id);
-      localStorage.setItem("memberEmail", email);
-      localStorage.setItem("memberName", data.member.name);
-      localStorage.setItem("memberCompany", data.member.company);
+      localStorage.setItem("memberId", memberData.memberId || memberData.id);
+      localStorage.setItem("memberEmail", memberData.email || email);
+      localStorage.setItem("memberName", memberData.name);
+      localStorage.setItem("memberCompany", memberData.company);
       localStorage.setItem("userType", "member");
 
       // Verificar se precisa completar perfil
-      if (data.needsCompletion) {
+      if (data.needsCompletion || memberData.needsCompletion) {
         navigate("/member/complete-profile");
       } else {
         navigate("/member/dashboard");
