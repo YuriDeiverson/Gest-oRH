@@ -138,7 +138,9 @@ export class IntentionController {
       console.log(`📋 Intention status: ${intention.status}`);
 
       if (intention.status !== IntentionStatus.PENDING) {
-        console.log(`⚠️ Intention already processed. Status: ${intention.status}`);
+        console.log(
+          `⚠️ Intention already processed. Status: ${intention.status}`,
+        );
         return res.status(400).json({
           error: "Apenas intenções pendentes podem ser aprovadas",
         });
@@ -207,9 +209,9 @@ export class IntentionController {
       });
     } catch (error) {
       console.error("Error approving intention:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Erro ao aprovar intenção",
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
       });
     }
   }

@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { intentionService, memberService, setAdminToken, type Intention } from "../services/api";
+import {
+  intentionService,
+  memberService,
+  setAdminToken,
+  type Intention,
+} from "../services/api";
 import { config } from "../config/config";
 
 interface Stats {
@@ -15,9 +20,11 @@ export const AdminDashboardNew: React.FC = () => {
   const [stats, setStats] = useState<Stats>({
     activeMembers: 0,
     monthlyReferrals: 0,
-    monthlyThanks: 0
+    monthlyThanks: 0,
   });
-  const [filter, setFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("PENDING");
+  const [filter, setFilter] = useState<
+    "ALL" | "PENDING" | "APPROVED" | "REJECTED"
+  >("PENDING");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -37,7 +44,7 @@ export const AdminDashboardNew: React.FC = () => {
       setStats({
         activeMembers: activeCount,
         monthlyReferrals: 35, // Valor fixo
-        monthlyThanks: 18 // Valor fixo
+        monthlyThanks: 18, // Valor fixo
       });
     } catch (err) {
       console.error("Erro ao carregar estatísticas:", err);
@@ -67,9 +74,11 @@ export const AdminDashboardNew: React.FC = () => {
       await loadData();
       await loadStats(); // Recarregar estatísticas para atualizar contador
     } catch (err) {
-      const errorMessage = (err as { response?: { data?: { error?: string } }; message?: string })?.response?.data?.error || 
-                          (err as Error)?.message || 
-                          "Erro ao aprovar intenção";
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } }; message?: string })
+          ?.response?.data?.error ||
+        (err as Error)?.message ||
+        "Erro ao aprovar intenção";
       setError(errorMessage);
     }
   };
@@ -85,18 +94,21 @@ export const AdminDashboardNew: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('userType');
-    navigate('/');
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("userType");
+    navigate("/");
   };
 
   const getStatusColor = (status: string) => {
     const colors = {
-      'PENDING': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'APPROVED': 'bg-green-100 text-green-800 border-green-200',
-      'REJECTED': 'bg-red-100 text-red-800 border-red-200'
+      PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      APPROVED: "bg-green-100 text-green-800 border-green-200",
+      REJECTED: "bg-red-100 text-red-800 border-red-200",
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return (
+      colors[status as keyof typeof colors] ||
+      "bg-gray-100 text-gray-800 border-gray-200"
+    );
   };
 
   const getStatusLabel = (status: string) => {
@@ -123,8 +135,12 @@ export const AdminDashboardNew: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
-              <p className="text-sm text-gray-600">Gerencie intenções e acompanhe métricas</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Painel Administrativo
+              </h1>
+              <p className="text-sm text-gray-600">
+                Gerencie intenções e acompanhe métricas
+              </p>
             </div>
             <button
               onClick={handleLogout}
@@ -141,14 +157,24 @@ export const AdminDashboardNew: React.FC = () => {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
             <p className="text-sm text-red-800">{error}</p>
-            <button onClick={() => setError('')} className="text-red-600 hover:text-red-800 cursor-pointer">×</button>
+            <button
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-800 cursor-pointer"
+            >
+              ×
+            </button>
           </div>
         )}
 
         {successMessage && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex justify-between items-center">
             <p className="text-sm text-green-800">{successMessage}</p>
-            <button onClick={() => setSuccessMessage('')} className="text-green-600 hover:text-green-800 cursor-pointer">×</button>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800 cursor-pointer"
+            >
+              ×
+            </button>
           </div>
         )}
 
@@ -157,8 +183,12 @@ export const AdminDashboardNew: React.FC = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Membros Ativos</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.activeMembers}</p>
+                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                  Membros Ativos
+                </p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats.activeMembers}
+                </p>
               </div>
               <div className="text-4xl">👥</div>
             </div>
@@ -167,8 +197,12 @@ export const AdminDashboardNew: React.FC = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Indicações/Mês</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.monthlyReferrals}</p>
+                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                  Indicações/Mês
+                </p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats.monthlyReferrals}
+                </p>
               </div>
               <div className="text-4xl">🤝</div>
             </div>
@@ -177,8 +211,12 @@ export const AdminDashboardNew: React.FC = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Obrigados/Mês</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.monthlyThanks}</p>
+                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                  Obrigados/Mês
+                </p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats.monthlyThanks}
+                </p>
               </div>
               <div className="text-4xl">💚</div>
             </div>
@@ -187,19 +225,21 @@ export const AdminDashboardNew: React.FC = () => {
 
         {/* Filters */}
         <div className="mb-6 flex gap-2 flex-wrap">
-          {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
-                filter === status
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {status === 'ALL' ? 'Todas' : getStatusLabel(status)}
-            </button>
-          ))}
+          {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map(
+            (status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
+                  filter === status
+                    ? "bg-primary-600 text-white shadow-sm"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                {status === "ALL" ? "Todas" : getStatusLabel(status)}
+              </button>
+            ),
+          )}
         </div>
 
         {/* Intentions List */}
@@ -210,35 +250,58 @@ export const AdminDashboardNew: React.FC = () => {
         ) : (
           <div className="grid gap-6">
             {intentions.map((intention) => (
-              <div key={intention.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+              <div
+                key={intention.id}
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+              >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{intention.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{new Date(intention.createdAt).toLocaleDateString('pt-BR')}</p>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {intention.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {new Date(intention.createdAt).toLocaleDateString(
+                          "pt-BR",
+                        )}
+                      </p>
                     </div>
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(intention.status)}`}>
+                    <span
+                      className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(
+                        intention.status,
+                      )}`}
+                    >
                       {getStatusLabel(intention.status)}
                     </span>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">E-mail</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        E-mail
+                      </p>
                       <p className="text-sm text-gray-900">{intention.email}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Empresa</p>
-                      <p className="text-sm text-gray-900">{intention.company}</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        Empresa
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {intention.company}
+                      </p>
                     </div>
                   </div>
 
                   <div className="mb-4">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Motivo</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">{intention.reason}</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Motivo
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {intention.reason}
+                    </p>
                   </div>
 
-                  {intention.status === 'PENDING' && (
+                  {intention.status === "PENDING" && (
                     <div className="flex gap-3 pt-4 border-t border-gray-200">
                       <button
                         onClick={() => handleApprove(intention.id)}
