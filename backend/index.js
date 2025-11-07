@@ -68,6 +68,12 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -79,19 +85,22 @@ app.get("/api/health", (req, res) => {
 
 // Import routes (será necessário adaptar)
 try {
-  const intentionRoutes = require("../dist/routes/intention.routes").default;
-  const memberRoutes = require("../dist/routes/member.routes").default;
-  const referralRoutes = require("../dist/routes/referral.routes").default;
+  const intentionRoutes = require("./dist/routes/intention.routes").default;
+  const memberRoutes = require("./dist/routes/member.routes").default;
+  const referralRoutes = require("./dist/routes/referral.routes").default;
 
   app.use("/api/intentions", intentionRoutes);
   app.use("/api/members", memberRoutes);
   app.use("/api/referrals", referralRoutes);
+  
+  console.log("Routes loaded successfully");
 } catch (error) {
   console.error("Error loading routes:", error);
   app.use("/api/*", (req, res) => {
     res.status(500).json({
       error: "Server configuration error",
       message: error.message,
+      stack: error.stack,
     });
   });
 }
@@ -100,6 +109,16 @@ try {
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Something went wrong!" });
+});
+
+// 404 handler - deve ser a última rota
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: "Not Found",
+    path: req.path,
+    method: req.method,
+    message: "Route not found. Available routes start with /api/"
+  });
 });
 
 module.exports = app;
