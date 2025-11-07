@@ -89,10 +89,16 @@ try {
   const memberRoutes = require("./dist/routes/member.routes").default;
   const referralRoutes = require("./dist/routes/referral.routes").default;
 
+  // Rotas com /api (padrão)
   app.use("/api/intentions", intentionRoutes);
   app.use("/api/members", memberRoutes);
   app.use("/api/referrals", referralRoutes);
   
+  // Rotas sem /api (para compatibilidade)
+  app.use("/intentions", intentionRoutes);
+  app.use("/members", memberRoutes);
+  app.use("/referrals", referralRoutes);
+
   console.log("Routes loaded successfully");
 } catch (error) {
   console.error("Error loading routes:", error);
@@ -113,11 +119,11 @@ app.use((err, req, res, next) => {
 
 // 404 handler - deve ser a última rota
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: "Not Found",
     path: req.path,
     method: req.method,
-    message: "Route not found. Available routes start with /api/"
+    message: "Route not found. Available routes start with /api/",
   });
 });
 
