@@ -117,11 +117,14 @@ try {
   console.log("Routes loaded successfully");
 } catch (error) {
   console.error("Error loading routes:", error);
-  app.use("/api/*", (req, res) => {
+  console.error("Stack:", error.stack);
+  
+  // Fallback para qualquer rota
+  app.use("*", (req, res) => {
     res.status(500).json({
       error: "Server configuration error",
       message: error.message,
-      stack: error.stack,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   });
 }
