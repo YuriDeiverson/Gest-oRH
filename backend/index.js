@@ -100,9 +100,13 @@ app.get("/api/health", (req, res) => {
 
 // Import routes (será necessário adaptar)
 try {
+  console.log("📂 Attempting to load routes from:", __dirname + "/dist/routes");
+  
   const intentionRoutes = require("./dist/routes/intention.routes").default;
   const memberRoutes = require("./dist/routes/member.routes").default;
   const referralRoutes = require("./dist/routes/referral.routes").default;
+
+  console.log("✅ Routes modules loaded");
 
   // Rotas com /api (padrão)
   app.use("/api/intentions", intentionRoutes);
