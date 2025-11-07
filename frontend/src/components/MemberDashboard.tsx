@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { config } from "../config/config";
+
+const API_URL = config.apiUrl;
 
 interface Referral {
   id: string;
@@ -48,37 +51,40 @@ const MemberDashboardNew: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [showIndicationForm, setShowIndicationForm] = useState(false);
   const [formData, setFormData] = useState<ReferralFormData>({
-    receiverId: '',
-    companyName: '',
-    contactName: '',
-    contactInfo: '',
-    opportunity: ''
+    receiverId: "",
+    companyName: "",
+    contactName: "",
+    contactInfo: "",
+    opportunity: "",
   });
   const [indicationData, setIndicationData] = useState<IndicationFormData>({
-    name: '',
-    email: '',
-    company: '',
-    reason: ''
+    name: "",
+    email: "",
+    company: "",
+    reason: "",
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    const memberId = localStorage.getItem('memberId');
-    const memberEmail = localStorage.getItem('memberEmail');
+    const memberId = localStorage.getItem("memberId");
+    const memberEmail = localStorage.getItem("memberEmail");
 
     if (!memberId || !memberEmail) {
-      navigate('/member/login');
+      navigate("/member/login");
       return;
     }
 
     try {
-      const memberResponse = await fetch(`http://localhost:3001/api/members/${memberId}/public`);
-      if (!memberResponse.ok) throw new Error('Erro ao carregar dados do membro');
+      const memberResponse = await fetch(
+        `http://localhost:3001/api/members/${memberId}/public`,
+      );
+      if (!memberResponse.ok)
+        throw new Error("Erro ao carregar dados do membro");
       const memberResult = await memberResponse.json();
       setMemberData({
         id: memberResult.data.id,
@@ -86,202 +92,253 @@ const MemberDashboardNew: React.FC = () => {
         email: memberResult.data.intention.email,
         company: memberResult.data.intention.company,
         profession: memberResult.data.profession,
-        segment: memberResult.data.segment
+        segment: memberResult.data.segment,
       });
 
-      const membersResponse = await fetch('http://localhost:3001/api/members/public/list');
+      // Buscar membros ativos
+      const membersResponse = await fetch(`${API_URL}/members/public/list`);
       if (membersResponse.ok) {
         const membersResult = await membersResponse.json();
-        const mappedMembers = membersResult.data.map((m: any) => ({
-          id: m.id,
-          name: m.intention.name,
-          email: m.intention.email,
-          company: m.intention.company,
-          profession: m.profession,
-          segment: m.segment
-        })).filter((m: MemberData) => m.id !== memberId);
+        const mappedMembers = membersResult.data
+          .map((m: any) => ({
+            id: m.id,
+            name: m.intention.name,
+            email: m.intention.email,
+            company: m.intention.company,
+            profession: m.profession,
+            segment: m.segment,
+          }))
+          .filter((m: MemberData) => m.id !== memberId);
         setMembers(mappedMembers);
       }
 
       // Buscar todas as indicações feitas (intentions referidas por este membro)
-      const myIndicationsResponse = await fetch(`http://localhost:3001/api/intentions/public/list?referredBy=${memberId}`);
+      const myIndicationsResponse = await fetch(
+        `${API_URL}/intentions/public/list?referredBy=${memberId}`,
+      );
       if (myIndicationsResponse.ok) {
         const myIndicationsResult = await myIndicationsResponse.json();
         // Mapear para o formato de Referral
-        const mappedIndications = myIndicationsResult.data.map((intention: any) => ({
-          id: intention.id,
-          companyName: intention.company,
-          contactName: intention.name,
-          contactInfo: intention.email,
-          opportunity: intention.reason,
-          status: intention.status,
-          trackingStatus: intention.trackingStatus,
-          createdAt: intention.createdAt
-        }));
+        const mappedIndications = myIndicationsResult.data.map(
+          (intention: any) => ({
+            id: intention.id,
+            companyName: intention.company,
+            contactName: intention.name,
+            contactInfo: intention.email,
+            opportunity: intention.reason,
+            status: intention.status,
+            trackingStatus: intention.trackingStatus,
+            createdAt: intention.createdAt,
+          }),
+        );
         setReferralsGiven(mappedIndications);
       }
 
       // Buscar indicações aprovadas (intentions referidas por este membro)
-      const approvedResponse = await fetch(`http://localhost:3001/api/intentions/public/list?referredBy=${memberId}`);
+      const approvedResponse = await fetch(
+        `${API_URL}/intentions/public/list?referredBy=${memberId}`,
+      );
       if (approvedResponse.ok) {
         const approvedResult = await approvedResponse.json();
         // Filtrar apenas aprovadas
-        const approved = approvedResult.data.filter((intention: any) => intention.status === 'APPROVED');
-        setReferralsReceived(approved.map((intention: any) => ({
-          id: intention.id,
-          companyName: intention.company,
-          contactName: intention.name,
-          contactInfo: intention.email,
-          opportunity: intention.reason,
-          status: 'APPROVED',
-          trackingStatus: intention.trackingStatus,
-          createdAt: intention.createdAt
-        })));
+        const approved = approvedResult.data.filter(
+          (intention: any) => intention.status === "APPROVED",
+        );
+        setReferralsReceived(
+          approved.map((intention: any) => ({
+            id: intention.id,
+            companyName: intention.company,
+            contactName: intention.name,
+            contactInfo: intention.email,
+            opportunity: intention.reason,
+            status: "APPROVED",
+            trackingStatus: intention.trackingStatus,
+            createdAt: intention.createdAt,
+          })),
+        );
       }
 
       setLoading(false);
     } catch (err) {
-      console.error('Erro ao carregar dados:', err);
-      setError('Erro ao carregar dados');
+      console.error("Erro ao carregar dados:", err);
+      setError("Erro ao carregar dados");
       setLoading(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('memberId');
-    localStorage.removeItem('memberEmail');
-    localStorage.removeItem('userType');
-    navigate('/');
+    localStorage.removeItem("memberId");
+    localStorage.removeItem("memberEmail");
+    localStorage.removeItem("userType");
+    navigate("/");
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleFormChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmitReferral = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    const memberId = localStorage.getItem('memberId');
+    const memberId = localStorage.getItem("memberId");
     if (!memberId) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/referrals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_URL}/referrals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           giverId: memberId,
-          ...formData
-        })
+          ...formData,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao criar indicação');
+        throw new Error(errorData.error || "Erro ao criar indicação");
       }
 
-      setSuccess('Indicação criada com sucesso!');
+      setSuccess("Indicação criada com sucesso!");
       setFormData({
-        receiverId: '',
-        companyName: '',
-        contactName: '',
-        contactInfo: '',
-        opportunity: ''
+        receiverId: "",
+        companyName: "",
+        contactName: "",
+        contactInfo: "",
+        opportunity: "",
       });
       setShowForm(false);
       loadData();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao criar indicação';
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao criar indicação";
       setError(errorMessage);
     }
   };
 
   const handleIndicationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    const memberId = localStorage.getItem('memberId');
+    const memberId = localStorage.getItem("memberId");
     if (!memberId) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/referrals/refer/${memberId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(indicationData)
+      const response = await fetch(`${API_URL}/referrals/refer/${memberId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(indicationData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao enviar indicação');
+        throw new Error(errorData.error || "Erro ao enviar indicação");
       }
 
-      setSuccess('Indicação enviada para aprovação do admin!');
+      setSuccess("Indicação enviada para aprovação do admin!");
       setIndicationData({
-        name: '',
-        email: '',
-        company: '',
-        reason: ''
+        name: "",
+        email: "",
+        company: "",
+        reason: "",
       });
       setShowIndicationForm(false);
-      
+
       // Recarregar dados para mostrar a nova indicação
       setTimeout(() => loadData(), 500);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao enviar indicação';
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao enviar indicação";
       setError(errorMessage);
     }
   };
 
-  const updateReferralStatus = async (referralId: string, newStatus: string): Promise<void> => {
+  const updateReferralStatus = async (
+    referralId: string,
+    newStatus: string,
+  ): Promise<void> => {
     try {
-      const response = await fetch(`http://localhost:3001/api/intentions/${referralId}/tracking-status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackingStatus: newStatus })
-      });
+      const response = await fetch(
+        `${API_URL}/intentions/${referralId}/tracking-status`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trackingStatus: newStatus }),
+        },
+      );
 
-      if (!response.ok) throw new Error('Erro ao atualizar status');
+      if (!response.ok) throw new Error("Erro ao atualizar status");
 
-      setSuccess('Status atualizado com sucesso!');
-      
+      setSuccess("Status atualizado com sucesso!");
+
       // Recarregar dados para mostrar o novo status
       loadData();
     } catch (error) {
-      setError('Erro ao atualizar status');
+      setError("Erro ao atualizar status");
     }
   };
 
   const getStatusBadge = (status: string) => {
     const statusMap: { [key: string]: { label: string; className: string } } = {
       // Status de Referrals (oportunidades de negócio)
-      'NEW': { label: 'Nova', className: 'bg-blue-100 text-blue-800 border-blue-200' },
-      'IN_CONTACT': { label: 'Em Contato', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-      'NEGOTIATING': { label: 'Nova', className: 'bg-purple-100 text-purple-800 border-purple-200' },
-      'CLOSED': { label: 'Fechada', className: 'bg-green-100 text-green-800 border-green-200' },
-      'REJECTED': { label: 'Recusada', className: 'bg-red-100 text-red-800 border-red-200' },
+      NEW: {
+        label: "Nova",
+        className: "bg-blue-100 text-blue-800 border-blue-200",
+      },
+      IN_CONTACT: {
+        label: "Em Contato",
+        className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      },
+      NEGOTIATING: {
+        label: "Nova",
+        className: "bg-purple-100 text-purple-800 border-purple-200",
+      },
+      CLOSED: {
+        label: "Fechada",
+        className: "bg-green-100 text-green-800 border-green-200",
+      },
+      REJECTED: {
+        label: "Recusada",
+        className: "bg-red-100 text-red-800 border-red-200",
+      },
       // Status de Intentions (indicações de novos membros)
-      'PENDING': { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-      'APPROVED': { label: 'Aprovada', className: 'bg-green-100 text-green-800 border-green-200' },
+      PENDING: {
+        label: "Pendente",
+        className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      },
+      APPROVED: {
+        label: "Aprovada",
+        className: "bg-green-100 text-green-800 border-green-200",
+      },
     };
-    const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-800 border-gray-200' };
+    const config = statusMap[status] || {
+      label: status,
+      className: "bg-gray-100 text-gray-800 border-gray-200",
+    };
     return (
-      <span className={`px-3 py-1 text-xs font-medium rounded-full border ${config.className}`}>
+      <span
+        className={`px-3 py-1 text-xs font-medium rounded-full border ${config.className}`}
+      >
         {config.label}
       </span>
     );
   };
 
   const getTrackingStatusLabel = (status: string | null | undefined) => {
-    if (!status) return '';
+    if (!status) return "";
     const statusMap: { [key: string]: string } = {
-      'NEW': 'Nova',
-      'IN_CONTACT': 'Em Contato',
-      'NEGOTIATING': 'Nova',
-      'CLOSED': 'Fechada',
-      'REJECTED': 'Recusada',
+      NEW: "Nova",
+      IN_CONTACT: "Em Contato",
+      NEGOTIATING: "Nova",
+      CLOSED: "Fechada",
+      REJECTED: "Recusada",
     };
     return statusMap[status] || status;
   };
@@ -301,8 +358,12 @@ const MemberDashboardNew: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Área do Membro</h1>
-              <p className="text-sm text-gray-600">Bem-vindo, {memberData?.name}!</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Área do Membro
+              </h1>
+              <p className="text-sm text-gray-600">
+                Bem-vindo, {memberData?.name}!
+              </p>
             </div>
             <button
               onClick={handleLogout}
@@ -319,14 +380,24 @@ const MemberDashboardNew: React.FC = () => {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
             <p className="text-sm text-red-800">{error}</p>
-            <button onClick={() => setError('')} className="text-red-600 hover:text-red-800">×</button>
+            <button
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-800"
+            >
+              ×
+            </button>
           </div>
         )}
 
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex justify-between items-center">
             <p className="text-sm text-green-800">{success}</p>
-            <button onClick={() => setSuccess('')} className="text-green-600 hover:text-green-800">×</button>
+            <button
+              onClick={() => setSuccess("")}
+              className="text-green-600 hover:text-green-800"
+            >
+              ×
+            </button>
           </div>
         )}
 
@@ -334,32 +405,50 @@ const MemberDashboardNew: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Profile Card */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Meu Perfil</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Meu Perfil
+            </h3>
             <div className="space-y-3">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Empresa</p>
-                <p className="text-sm text-gray-900 mt-1">{memberData?.company}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Empresa
+                </p>
+                <p className="text-sm text-gray-900 mt-1">
+                  {memberData?.company}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Profissão</p>
-                <p className="text-sm text-gray-900 mt-1">{memberData?.profession}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Profissão
+                </p>
+                <p className="text-sm text-gray-900 mt-1">
+                  {memberData?.profession}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Segmento</p>
-                <p className="text-sm text-gray-900 mt-1">{memberData?.segment}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Segmento
+                </p>
+                <p className="text-sm text-gray-900 mt-1">
+                  {memberData?.segment}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Indicate New Member Card */}
           <div className="bg-white rounded-xl border border-primary-200 p-6 flex flex-col justify-center bg-linear-to-br from-primary-50 to-white">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Indicar Novo Membro</h3>
-            <p className="text-sm text-gray-600 mb-4">Convide alguém para participar do grupo de networking.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Indicar Novo Membro
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Convide alguém para participar do grupo de networking.
+            </p>
             <button
               onClick={() => setShowIndicationForm(!showIndicationForm)}
               className="px-4 py-2 bg-linear-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-medium rounded-lg transition-all shadow-md"
             >
-              {showIndicationForm ? 'Cancelar' : 'Indicar Pessoa'}
+              {showIndicationForm ? "Cancelar" : "Indicar Pessoa"}
             </button>
           </div>
         </div>
@@ -367,11 +456,19 @@ const MemberDashboardNew: React.FC = () => {
         {/* Indication Form */}
         {showIndicationForm && (
           <div className="bg-linear-to-br from-primary-50 to-white rounded-xl border border-primary-200 p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Indicar Novo Membro</h3>
-            <p className="text-sm text-gray-600 mb-4">Preencha os dados da pessoa que você quer indicar. Sua indicação será enviada para aprovação do administrador.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Indicar Novo Membro
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Preencha os dados da pessoa que você quer indicar. Sua indicação
+              será enviada para aprovação do administrador.
+            </p>
             <form onSubmit={handleIndicationSubmit} className="space-y-4">
               <div>
-                <label htmlFor="indication-name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="indication-name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Nome Completo *
                 </label>
                 <input
@@ -379,14 +476,22 @@ const MemberDashboardNew: React.FC = () => {
                   id="indication-name"
                   name="name"
                   value={indicationData.name}
-                  onChange={(e) => setIndicationData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setIndicationData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   required
                 />
               </div>
-              
+
               <div>
-                <label htmlFor="indication-email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="indication-email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Email *
                 </label>
                 <input
@@ -394,14 +499,22 @@ const MemberDashboardNew: React.FC = () => {
                   id="indication-email"
                   name="email"
                   value={indicationData.email}
-                  onChange={(e) => setIndicationData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setIndicationData((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="indication-company" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="indication-company"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Empresa *
                 </label>
                 <input
@@ -409,21 +522,34 @@ const MemberDashboardNew: React.FC = () => {
                   id="indication-company"
                   name="company"
                   value={indicationData.company}
-                  onChange={(e) => setIndicationData(prev => ({ ...prev, company: e.target.value }))}
+                  onChange={(e) =>
+                    setIndicationData((prev) => ({
+                      ...prev,
+                      company: e.target.value,
+                    }))
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="indication-reason" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="indication-reason"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Por que você está indicando esta pessoa? *
                 </label>
                 <textarea
                   id="indication-reason"
                   name="reason"
                   value={indicationData.reason}
-                  onChange={(e) => setIndicationData(prev => ({ ...prev, reason: e.target.value }))}
+                  onChange={(e) =>
+                    setIndicationData((prev) => ({
+                      ...prev,
+                      reason: e.target.value,
+                    }))
+                  }
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                   required
@@ -443,10 +569,15 @@ const MemberDashboardNew: React.FC = () => {
         {/* Form */}
         {showForm && (
           <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Nova Indicação</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Nova Indicação
+            </h3>
             <form onSubmit={handleSubmitReferral} className="space-y-4">
               <div>
-                <label htmlFor="receiverId" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="receiverId"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Para quem é a indicação?
                 </label>
                 <select
@@ -458,7 +589,7 @@ const MemberDashboardNew: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                 >
                   <option value="">Selecione um membro</option>
-                  {members.map(member => (
+                  {members.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.name} - {member.profession} ({member.company})
                     </option>
@@ -467,7 +598,10 @@ const MemberDashboardNew: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="companyName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Nome da Empresa
                 </label>
                 <input
@@ -482,7 +616,10 @@ const MemberDashboardNew: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="contactName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="contactName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Nome do Contato
                 </label>
                 <input
@@ -497,7 +634,10 @@ const MemberDashboardNew: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="contactInfo" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="contactInfo"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Informações de Contato
                 </label>
                 <input
@@ -513,7 +653,10 @@ const MemberDashboardNew: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="opportunity" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="opportunity"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Descrição da Oportunidade
                 </label>
                 <textarea
@@ -539,25 +682,42 @@ const MemberDashboardNew: React.FC = () => {
 
         {/* Referrals Given */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Minhas Indicações ({referralsGiven.length})</h3>
-          <p className="text-sm text-gray-600 mb-4">Pessoas que você indicou para participar do grupo de networking.</p>
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">
+            Minhas Indicações ({referralsGiven.length})
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Pessoas que você indicou para participar do grupo de networking.
+          </p>
           {referralsGiven.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <p className="text-gray-500">Você ainda não fez nenhuma indicação.</p>
+              <p className="text-gray-500">
+                Você ainda não fez nenhuma indicação.
+              </p>
             </div>
           ) : (
             <div className="grid gap-4">
-              {referralsGiven.map(referral => (
-                <div key={referral.id} className="bg-white rounded-xl border border-gray-200 p-6">
+              {referralsGiven.map((referral) => (
+                <div
+                  key={referral.id}
+                  className="bg-white rounded-xl border border-gray-200 p-6"
+                >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900">{referral.contactName}</h4>
-                      <p className="text-sm text-gray-600">{referral.contactInfo}</p>
-                      <p className="text-sm text-gray-600">Empresa: {referral.companyName}</p>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        {referral.contactName}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {referral.contactInfo}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Empresa: {referral.companyName}
+                      </p>
                     </div>
                     {getStatusBadge(referral.status)}
                   </div>
-                  <p className="text-sm text-gray-700">{referral.opportunity}</p>
+                  <p className="text-sm text-gray-700">
+                    {referral.opportunity}
+                  </p>
                 </div>
               ))}
             </div>
@@ -566,55 +726,79 @@ const MemberDashboardNew: React.FC = () => {
 
         {/* Approved Indications (Indications Made by Member that were Approved) */}
         <div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Indicações Aprovadas ({referralsReceived.length})</h3>
-          <p className="text-sm text-gray-600 mb-4">Pessoas que você indicou e que foram aprovadas pelo administrador.</p>
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">
+            Indicações Aprovadas ({referralsReceived.length})
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Pessoas que você indicou e que foram aprovadas pelo administrador.
+          </p>
           {referralsReceived.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <p className="text-gray-500">Você ainda não tem indicações aprovadas.</p>
+              <p className="text-gray-500">
+                Você ainda não tem indicações aprovadas.
+              </p>
             </div>
           ) : (
             <div className="grid gap-4">
-              {referralsReceived.map(referral => (
-                <div key={referral.id} className="bg-white rounded-xl border border-gray-200 p-6">
+              {referralsReceived.map((referral) => (
+                <div
+                  key={referral.id}
+                  className="bg-white rounded-xl border border-gray-200 p-6"
+                >
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900">
                         {referral.companyName}
                         {referral.trackingStatus && (
-                          <span className="text-base font-normal text-gray-600"> - {getTrackingStatusLabel(referral.trackingStatus)}</span>
+                          <span className="text-base font-normal text-gray-600">
+                            {" "}
+                            - {getTrackingStatusLabel(referral.trackingStatus)}
+                          </span>
                         )}
                       </h4>
-                      <p className="text-sm text-gray-600">De: {referral.giver?.intention?.name || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">
+                        De: {referral.giver?.intention?.name || "N/A"}
+                      </p>
                     </div>
                     {getStatusBadge(referral.status)}
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{referral.opportunity}</p>
-                  <p className="text-xs text-gray-500 mb-4">Contato: {referral.contactName} - {referral.contactInfo}</p>
-                  
+                  <p className="text-sm text-gray-700 mb-2">
+                    {referral.opportunity}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Contato: {referral.contactName} - {referral.contactInfo}
+                  </p>
+
                   <div className="border-t border-gray-200 pt-4">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Atualizar Status</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                      Atualizar Status
+                    </p>
                     <div className="flex gap-2 flex-wrap">
-                      {['IN_CONTACT', 'NEGOTIATING', 'CLOSED', 'REJECTED'].map(status => (
-                        <button
-                          key={status}
-                          onClick={() => updateReferralStatus(referral.id, status)}
-                          disabled={referral.trackingStatus === status}
-                          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                            referral.trackingStatus === status
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : status === 'CLOSED'
-                              ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
-                              : status === 'REJECTED'
-                              ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
-                              : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                          }`}
-                        >
-                          {status === 'IN_CONTACT' && 'Em Contato'}
-                          {status === 'NEGOTIATING' && 'Nova'}
-                          {status === 'CLOSED' && 'Fechada'}
-                          {status === 'REJECTED' && 'Recusada'}
-                        </button>
-                      ))}
+                      {["IN_CONTACT", "NEGOTIATING", "CLOSED", "REJECTED"].map(
+                        (status) => (
+                          <button
+                            key={status}
+                            onClick={() =>
+                              updateReferralStatus(referral.id, status)
+                            }
+                            disabled={referral.trackingStatus === status}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                              referral.trackingStatus === status
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : status === "CLOSED"
+                                ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                                : status === "REJECTED"
+                                ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                                : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+                            }`}
+                          >
+                            {status === "IN_CONTACT" && "Em Contato"}
+                            {status === "NEGOTIATING" && "Nova"}
+                            {status === "CLOSED" && "Fechada"}
+                            {status === "REJECTED" && "Recusada"}
+                          </button>
+                        ),
+                      )}
                     </div>
                   </div>
                 </div>
