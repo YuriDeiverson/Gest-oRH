@@ -101,10 +101,15 @@ app.get("/api/health", (req, res) => {
 // Import routes (será necessário adaptar)
 try {
   console.log("📂 Attempting to load routes from:", __dirname + "/dist/routes");
-  
+
   const intentionRoutes = require("./dist/routes/intention.routes").default;
   const memberRoutes = require("./dist/routes/member.routes").default;
   const referralRoutes = require("./dist/routes/referral.routes").default;
+  const announcementRoutes =
+    require("./dist/routes/announcement.routes").default;
+  const presenceRoutes = require("./dist/routes/presence.routes").default;
+  const businessOpportunityRoutes =
+    require("./dist/routes/businessOpportunity.routes").default;
 
   console.log("✅ Routes modules loaded");
 
@@ -112,11 +117,17 @@ try {
   app.use("/api/intentions", intentionRoutes);
   app.use("/api/members", memberRoutes);
   app.use("/api/referrals", referralRoutes);
+  app.use("/api/announcements", announcementRoutes);
+  app.use("/api/presences", presenceRoutes);
+  app.use("/api/opportunities", businessOpportunityRoutes);
 
   // Rotas sem /api (para compatibilidade)
   app.use("/intentions", intentionRoutes);
   app.use("/members", memberRoutes);
   app.use("/referrals", referralRoutes);
+  app.use("/announcements", announcementRoutes);
+  app.use("/presences", presenceRoutes);
+  app.use("/opportunities", businessOpportunityRoutes);
 
   console.log("Routes loaded successfully");
 } catch (error) {
@@ -147,6 +158,12 @@ app.use((req, res) => {
     method: req.method,
     message: "Route not found. Available routes start with /api/",
   });
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
 module.exports = app;

@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import intentionRoutes from "./routes/intention.routes";
 import memberRoutes from "./routes/member.routes";
 import referralRoutes from "./routes/referral.routes";
+import announcementRoutes from "./routes/announcement.routes";
+import businessOpportunityRoutes from "./routes/businessOpportunity.routes";
+import presenceRoutes from "./routes/presence.routes";
+import postRoutes from "./routes/post.routes";
 import { errorHandler } from "./middleware/errorHandler";
 
 dotenv.config();
@@ -84,6 +88,10 @@ app.get("/health", (req, res) => {
 app.use("/api/intentions", intentionRoutes);
 app.use("/api/members", memberRoutes);
 app.use("/api/referrals", referralRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/opportunities", businessOpportunityRoutes);
+app.use("/api/presences", presenceRoutes);
+app.use("/api/posts", postRoutes);
 
 // Error handling
 app.use(errorHandler);

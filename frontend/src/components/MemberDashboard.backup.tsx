@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { config } from "../config/config";
 import AnnouncementsList from "./AnnouncementsList";
+import MeetingCheckIn from "./MeetingCheckIn";
 import BusinessOpportunitiesFeed from "./BusinessOpportunitiesFeed";
 import MemberNavbar from "./Layout/MemberNavbar";
 import PostComposer from "./PostComposer";
@@ -507,7 +508,7 @@ const MemberDashboardNew: React.FC = () => {
             {activeSubTab === "referrals" && (
               <>
                 <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Referências Recebidas</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Referências feitas sobre você</h3>
                   {referralsReceived.length === 0 ? (
                     <p className="text-sm text-gray-500">Nenhuma referência recebida ainda.</p>
                   ) : (
@@ -642,7 +643,7 @@ const MemberDashboardNew: React.FC = () => {
                 {/* Indications List */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Indicações de Pessoas
+                    Minhas Indicações de Pessoas
                   </h3>
                   {indications.length === 0 ? (
                     <div className="text-center py-8">
@@ -701,6 +702,373 @@ const MemberDashboardNew: React.FC = () => {
                 </div>
               </>
             )}
+          </>
+        )}
+
+        {/* (Oportunidades gerenciadas em aba dedicada) */}
+      </main>
+    </div>
+  );
+};
+
+export default MemberDashboardNew;
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Indicar Novo Membro
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Preencha os dados da pessoa que você quer indicar. Sua
+                  indicação será enviada para aprovação do administrador.
+                </p>
+                <form onSubmit={handleIndicationSubmit} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="indication-name"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Nome Completo *
+                    </label>
+                    <input
+                      type="text"
+                      id="indication-name"
+                      name="name"
+                      value={indicationData.name}
+                      onChange={(e) =>
+                        setIndicationData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="indication-email"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      id="indication-email"
+                      name="email"
+                      value={indicationData.email}
+                      onChange={(e) =>
+                        setIndicationData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="indication-company"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Empresa *
+                    </label>
+                    <input
+                      type="text"
+                      id="indication-company"
+                      name="company"
+                      value={indicationData.company}
+                      onChange={(e) =>
+                        setIndicationData((prev) => ({
+                          ...prev,
+                          company: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="indication-reason"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Por que você está indicando esta pessoa? *
+                    </label>
+                    <textarea
+                      id="indication-reason"
+                      name="reason"
+                      value={indicationData.reason}
+                      onChange={(e) =>
+                        setIndicationData((prev) => ({
+                          ...prev,
+                          reason: e.target.value,
+                        }))
+                      }
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-3 bg-linear-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold rounded-lg transition-all shadow-lg"
+                  >
+                    Enviar Indicação para Aprovação
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Form */}
+            {showForm && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Nova Indicação
+                </h3>
+                <form onSubmit={handleSubmitReferral} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="receiverId"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Para quem é a indicação?
+                    </label>
+                    <select
+                      id="receiverId"
+                      name="receiverId"
+                      value={formData.receiverId}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Selecione um membro</option>
+                      {members.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name} - {member.profession} ({member.company})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="companyName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Nome da Empresa
+                    </label>
+                    <input
+                      type="text"
+                      id="companyName"
+                      name="companyName"
+                      value={formData.companyName}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="contactName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Nome do Contato
+                    </label>
+                    <input
+                      type="text"
+                      id="contactName"
+                      name="contactName"
+                      value={formData.contactName}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="contactInfo"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Informações de Contato
+                    </label>
+                    <input
+                      type="text"
+                      id="contactInfo"
+                      name="contactInfo"
+                      value={formData.contactInfo}
+                      onChange={handleFormChange}
+                      placeholder="Telefone, e-mail, etc."
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="opportunity"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Descrição da Oportunidade
+                    </label>
+                    <textarea
+                      id="opportunity"
+                      name="opportunity"
+                      value={formData.opportunity}
+                      onChange={handleFormChange}
+                      rows={4}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+                  >
+                    Enviar Indicação
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Referrals Given */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Minhas Indicações ({referralsGiven.length})
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Pessoas que você indicou para participar do grupo de networking.
+              </p>
+              {referralsGiven.length === 0 ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                  <p className="text-gray-500">
+                    Você ainda não fez nenhuma indicação.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {referralsGiven.map((referral) => (
+                    <div
+                      key={referral.id}
+                      className="bg-white rounded-xl border border-gray-200 p-6"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900">
+                            {referral.contactName}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {referral.contactInfo}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Empresa: {referral.companyName}
+                          </p>
+                        </div>
+                        {getStatusBadge(referral.status)}
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        {referral.opportunity}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Approved Indications (Indications Made by Member that were Approved) */}
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Indicações Aprovadas ({referralsReceived.length})
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Pessoas que você indicou e que foram aprovadas pelo
+                administrador.
+              </p>
+              {referralsReceived.length === 0 ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                  <p className="text-gray-500">
+                    Você ainda não tem indicações aprovadas.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {referralsReceived.map((referral) => (
+                    <div
+                      key={referral.id}
+                      className="bg-white rounded-xl border border-gray-200 p-6"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900">
+                            {referral.companyName}
+                            {referral.trackingStatus && (
+                              <span className="text-base font-normal text-gray-600">
+                                {" "}
+                                -{" "}
+                                {getTrackingStatusLabel(
+                                  referral.trackingStatus,
+                                )}
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            De: {referral.giver?.intention?.name || "N/A"}
+                          </p>
+                        </div>
+                        {getStatusBadge(referral.status)}
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2">
+                        {referral.opportunity}
+                      </p>
+                      <p className="text-xs text-gray-500 mb-4">
+                        Contato: {referral.contactName} - {referral.contactInfo}
+                      </p>
+
+                      <div className="border-t border-gray-200 pt-4">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                          Atualizar Status
+                        </p>
+                        <div className="flex gap-2 flex-wrap">
+                          {[
+                            "IN_CONTACT",
+                            "NEGOTIATING",
+                            "CLOSED",
+                            "REJECTED",
+                          ].map((status) => (
+                            <button
+                              key={status}
+                              onClick={() =>
+                                updateReferralStatus(referral.id, status)
+                              }
+                              disabled={referral.trackingStatus === status}
+                              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                                referral.trackingStatus === status
+                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                  : status === "CLOSED"
+                                  ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                                  : status === "REJECTED"
+                                  ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+                              }`}
+                            >
+                              {status === "IN_CONTACT" && "Em Contato"}
+                              {status === "NEGOTIATING" && "Nova"}
+                              {status === "CLOSED" && "Fechada"}
+                              {status === "REJECTED" && "Recusada"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
 

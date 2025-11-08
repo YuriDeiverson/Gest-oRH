@@ -59,6 +59,7 @@ model Member {
   meetingsAsGuest     OneToOneMeeting[] @relation("GuestMeetings")
   presences           Presence[]
   thanks              Thank[]
+  posts               Post[]
 }
 
 // Sistema de Indicações/Referências
@@ -115,6 +116,12 @@ model Presence {
   checkedIn Boolean  @default(false)
   checkedAt DateTime?
   
+  // Informações adicionais
+  location  String?  // Local do check-in (online/presencial)
+  notes     String?  // Observações
+  
+  createdAt DateTime @default(now())
+  
   @@unique([meetingId, memberId])
 }
 
@@ -131,13 +138,22 @@ model Thank {
 
 // Avisos e Comunicados
 model Announcement {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  priority  String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  type        String   @default("INFO") // INFO, WARNING, URGENT, EVENT
+  priority    Int      @default(0) // 0=normal, 1=alta, 2=urgente
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Publicação
+  publishedAt DateTime @default(now())
+  expiresAt   DateTime? // Opcional: data de expiração
+  isActive    Boolean  @default(true)
+  
+  // Autor (admin)
+  authorName  String   @default("Administração")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // Controle Financeiro - Mensalidades
@@ -156,4 +172,47 @@ model Payment {
   updatedAt   DateTime @updatedAt
   
   @@index([memberId, referenceMonth])
+}
+
+// Oportunidades de Negócio
+model BusinessOpportunity {
+  id          String   @id @default(uuid())
+  
+  // Informações da oportunidade
+  title       String
+  description String
+  company     String?  // Empresa que oferece a oportunidade
+  contactName String?  // Pessoa de contato
+  
+  // Categorização
+  category    String   @default("GERAL") // GERAL, VENDA, COMPRA, PARCERIA, SERVICO
+  segment     String?  // Segmento de mercado
+  location    String?  // Localização (se relevante)
+  
+  // Valor e prazo
+  estimatedValue Float?
+  deadline       DateTime?
+  
+  // Publicação
+  publishedAt DateTime @default(now())
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  
+  // Autor (admin)
+  authorId    String?
+  authorName  String   @default("Administração")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Publicações dos membros (feed estilo LinkedIn)
+model Post {
+  id        String   @id @default(uuid())
+  authorId  String?
+  author    Member?  @relation(fields: [authorId], references: [id])
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
