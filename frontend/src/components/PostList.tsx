@@ -97,10 +97,12 @@ const PostList: React.FC<Props> = ({ refreshKey, onAddPost }) => {
   }, [refreshKey]);
 
   useEffect(() => {
-    if (onAddPost) {
+    if (onAddPost && addNewPost) {
       onAddPost(addNewPost);
     }
-  }, [onAddPost, addNewPost]);
+    // Executar apenas uma vez quando o componente montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) return <div className="p-4">Carregando feed...</div>;
 

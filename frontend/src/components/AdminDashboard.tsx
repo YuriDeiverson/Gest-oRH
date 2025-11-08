@@ -35,9 +35,7 @@ const AdminDashboard: React.FC = () => {
   // Estados para as funcionalidades
   const [intentions, setIntentions] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [opportunities, setOpportunities] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
-  const [announcements, setAnnouncements] = useState<any[]>([]);
 
   // Estados para modals/forms
   const [showNewOpportunityForm, setShowNewOpportunityForm] = useState(false);
@@ -67,15 +65,16 @@ const AdminDashboard: React.FC = () => {
     priority: "NORMAL",
   });
 
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Dados mockados para demonstração
+  // Carregar intenções reais da API com fallback para dados mockados
   const loadIntentions = async () => {
-    // Sempre usar dados mockados para demonstração
+    // Dados mockados para demonstração
     const mockIntentions = [
       {
-        id: "1",
+        id: "mock-1",
         name: "João Silva",
         email: "joao.silva@email.com",
         company: "TechCorp",
@@ -86,7 +85,7 @@ const AdminDashboard: React.FC = () => {
         createdAt: new Date().toISOString(),
       },
       {
-        id: "2",
+        id: "mock-2",
         name: "Ana Costa",
         email: "ana.costa@email.com",
         company: "Creative Studio",
@@ -97,7 +96,7 @@ const AdminDashboard: React.FC = () => {
         createdAt: new Date().toISOString(),
       },
       {
-        id: "3",
+        id: "mock-3",
         name: "Carlos Mendes",
         email: "carlos.mendes@email.com",
         company: "Marketing Digital Pro",
@@ -108,15 +107,37 @@ const AdminDashboard: React.FC = () => {
       },
     ];
 
-    // Filtrar apenas os que ainda estão pendentes (não foram processados)
-    const processed = JSON.parse(
-      localStorage.getItem("processedIntentions") || "[]",
-    );
-    const pendingIntentions = mockIntentions.filter(
-      (intention) => !processed.includes(intention.id),
-    );
+    try {
+      // Tentar carregar dados reais da API
+      const response = await api.get("/intentions", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || "secret-admin-token-123"}` }
+      });
+      
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        const realIntentions = response.data.data
+          .filter((intention: any) => intention.status === "PENDING")
+          .map((intention: any) => ({
+            id: intention.id,
+            name: intention.name,
+            email: intention.email,
+            company: intention.company,
+            reason: intention.reason,
+            status: intention.status,
+            createdAt: intention.createdAt
+          }));
+        
+        // Combinar dados reais com mockados
+        const allIntentions = [...realIntentions, ...mockIntentions];
+        setIntentions(allIntentions);
+        console.log("Carregadas", realIntentions.length, "intenções reais e", mockIntentions.length, "mockadas");
+        return;
+      }
+    } catch (error) {
+      console.log("API não disponível, usando apenas dados mockados:", error);
+    }
 
-    setIntentions(pendingIntentions);
+    // Se API falhar, usar apenas dados mockados
+    setIntentions(mockIntentions);
   };
 
   // Função para aprovar intenção (cria membro real no banco)
@@ -125,16 +146,8 @@ const AdminDashboard: React.FC = () => {
     if (!intention) return;
 
     try {
-      // Criar membro real no banco de dados
-      const memberData = {
-        name: intention.name,
-        email: intention.email,
-        company: intention.company,
-        position: intention.position,
-        isActive: true,
-      };
-
-      const response = await api.post("/members", memberData, {
+      // Aprovar intenção - isso automaticamente cria o membro no banco
+      const response = await api.patch(`/intentions/${id}/approve`, {}, {
         headers: {
           Authorization: `Bearer ${
             localStorage.getItem("adminToken") || "secret-admin-token-123"
@@ -142,19 +155,13 @@ const AdminDashboard: React.FC = () => {
         },
       });
 
-      if (response.status === 201) {
-        // Marcar como processado localmente
-        const processed = JSON.parse(
-          localStorage.getItem("processedIntentions") || "[]",
-        );
-        processed.push(id);
-        localStorage.setItem("processedIntentions", JSON.stringify(processed));
-
-        setSuccess(`Membro ${intention.name} aprovado e criado com sucesso!`);
+      if (response.status === 200) {
+        setSuccess(`Membro ${intention.name} aprovado com sucesso!`);
         loadIntentions();
+        loadReferrals(); // Atualizar histórico
         setRefreshKey((prev) => prev + 1);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao aprovar:", error);
       setError(
         `Erro ao aprovar membro: ${
@@ -169,15 +176,29 @@ const AdminDashboard: React.FC = () => {
     const intention = intentions.find((i) => i.id === id);
     if (!intention) return;
 
-    // Marcar como processado localmente (rejeitado)
-    const processed = JSON.parse(
-      localStorage.getItem("processedIntentions") || "[]",
-    );
-    processed.push(id);
-    localStorage.setItem("processedIntentions", JSON.stringify(processed));
+    try {
+      // Rejeitar intenção via API
+      const response = await api.patch(`/intentions/${id}/reject`, {}, {
+        headers: {
+          Authorization: `Bearer ${
+            localStorage.getItem("adminToken") || "secret-admin-token-123"
+          }`,
+        },
+      });
 
-    setSuccess(`Solicitação de ${intention.name} rejeitada`);
-    loadIntentions();
+      if (response.status === 200) {
+        setSuccess(`Solicitação de ${intention.name} rejeitada`);
+        loadIntentions();
+        loadReferrals(); // Atualizar histórico
+      }
+    } catch (error: any) {
+      console.error("Erro ao rejeitar:", error);
+      setError(
+        `Erro ao rejeitar: ${
+          error.response?.data?.error || error.message
+        }`,
+      );
+    }
   };
 
   // Função para criar oportunidade (simulação)
@@ -218,7 +239,7 @@ const AdminDashboard: React.FC = () => {
     setMeetings((prev) => [newMeetingData, ...prev]);
     setSuccess("Reunião agendada com sucesso!");
     setShowNewMeetingForm(false);
-    setNewMeeting({ memberId: "", date: "", time: "", topic: "", notes: "" });
+    setNewMeeting({ date: "", time: "", topic: "", notes: "" });
   };
 
   // Função para criar aviso (simulação)
@@ -237,6 +258,12 @@ const AdminDashboard: React.FC = () => {
       type: "INFO",
       priority: "NORMAL",
     });
+  };
+
+  // Função para logout
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    window.location.href = "/admin/login";
   };
 
   // Função para carregar reuniões (dados mockados)
@@ -268,28 +295,57 @@ const AdminDashboard: React.FC = () => {
     setMeetings(mockMeetings);
   };
 
-  // Função para carregar referrals (dados mockados)
-  const loadReferrals = () => {
+  // Função para carregar referrals (histórico de indicações aprovadas/rejeitadas)
+  const loadReferrals = async () => {
+    try {
+      // Buscar intenções da API
+      const response = await api.get("/intentions", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || "secret-admin-token-123"}` }
+      });
+      
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        // Filtrar apenas aprovadas e rejeitadas para o histórico
+        const processedIntentions = response.data.data
+          .filter((intention: any) => intention.status === "APPROVED" || intention.status === "REJECTED")
+          .map((intention: any) => ({
+            id: intention.id,
+            giver: { intention: { name: "Admin" } },
+            receiver: { intention: { name: intention.name } },
+            description: `${intention.company} - ${intention.reason}`,
+            status: intention.status === "APPROVED" ? "ACCEPTED" : "CLOSED",
+            createdAt: intention.updatedAt || intention.createdAt
+          }))
+          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 10); // Últimas 10
+        
+        setReferrals(processedIntentions);
+        return;
+      }
+    } catch (error) {
+      console.log("Erro ao carregar histórico, usando dados mockados:", error);
+    }
+
+    // Fallback: dados mockados
     const mockReferrals = [
       {
-        id: "1",
-        giver: { intention: { name: "Maria Santos" } },
-        receiver: { intention: { name: "Roberto Tech" } },
-        description: "Serviços de desenvolvimento web",
-        status: "PENDING",
-      },
-      {
-        id: "2",
-        giver: { intention: { name: "Pedro Lima" } },
-        receiver: { intention: { name: "Creative Agency" } },
-        description: "Design de identidade visual",
+        id: "mock-1",
+        giver: { intention: { name: "Admin" } },
+        receiver: { intention: { name: "Maria Santos" } },
+        description: "TechCorp - Indicação aprovada",
         status: "ACCEPTED",
       },
       {
-        id: "3",
-        giver: { intention: { name: "Carlos Mendes" } },
-        receiver: { intention: { name: "Marketing Pro" } },
-        description: "Consultoria em marketing digital",
+        id: "mock-2",
+        giver: { intention: { name: "Admin" } },
+        receiver: { intention: { name: "Pedro Lima" } },
+        description: "Creative Agency - Design de identidade visual",
+        status: "ACCEPTED",
+      },
+      {
+        id: "mock-3",
+        giver: { intention: { name: "Admin" } },
+        receiver: { intention: { name: "Carlos Mendes" } },
+        description: "Marketing Pro - Solicitação rejeitada",
         status: "CLOSED",
       },
     ];
@@ -350,6 +406,18 @@ const AdminDashboard: React.FC = () => {
     }
   }, [error, success]);
 
+  // Fechar dropdown quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showProfileDropdown && !(event.target as Element).closest('.relative')) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileDropdown]);
+
   if (loading)
     return (
       <div className="p-6 text-center">Carregando painel administrativo...</div>
@@ -367,8 +435,28 @@ const AdminDashboard: React.FC = () => {
 
             <div className="flex items-center space-x-4">
               <span className="text-gray-700">Olá, {adminData?.name}</span>
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                >
+                  <span className="text-white text-sm font-medium">A</span>
+                </button>
+                
+                {showProfileDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                      <div className="font-medium">{adminData?.name}</div>
+                      <div className="text-gray-500">Administrador</div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      🚪 Sair
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -509,7 +597,10 @@ const AdminDashboard: React.FC = () => {
                         Nenhuma indicação recente
                       </p>
                     ) : (
-                      referrals.slice(0, 5).map((referral) => (
+                      referrals
+                        .filter(ref => ref.status !== "PENDING")
+                        .slice(0, 5)
+                        .map((referral) => (
                         <div
                           key={referral.id}
                           className="p-4 border border-gray-200 rounded-lg"
@@ -523,20 +614,15 @@ const AdminDashboard: React.FC = () => {
                               <p className="text-sm text-gray-600">
                                 {referral.description}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Status: {referral.status}
-                              </p>
                             </div>
                             <span
                               className={`px-2 py-1 text-xs rounded-full ${
-                                referral.status === "PENDING"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : referral.status === "ACCEPTED"
+                                referral.status === "ACCEPTED"
                                   ? "bg-green-100 text-green-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  : "bg-red-100 text-red-800"
                               }`}
                             >
-                              {referral.status}
+                              {referral.status === "ACCEPTED" ? "Aprovado" : "Rejeitado"}
                             </span>
                           </div>
                         </div>

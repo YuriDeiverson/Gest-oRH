@@ -104,7 +104,7 @@ const MemberNavbar: React.FC<MemberNavbarProps> = ({
               return (
                 <button
                   key={item.id}
-                  onClick={() => onTabChange(item.tab)}
+                  onClick={() => onTabChange(item.tab as "announcements" | "opportunities" | "referrals" | "business" | "agendas")}
                   className={`flex flex-col items-center px-3 py-2 text-xs font-medium transition-colors duration-200 min-w-[80px] ${
                     isActive
                       ? "text-blue-600 border-b-2 border-blue-600"
@@ -199,7 +199,7 @@ const MemberNavbar: React.FC<MemberNavbarProps> = ({
               return (
                 <button
                   key={item.id}
-                  onClick={() => onTabChange(item.tab)}
+                  onClick={() => onTabChange(item.tab as "announcements" | "opportunities" | "referrals" | "business" | "agendas")}
                   className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
                       ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
