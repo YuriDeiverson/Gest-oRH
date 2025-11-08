@@ -240,7 +240,7 @@ const LandingPage: React.FC = () => {
       <footer className="bg-gray-900 text-gray-300 py-8 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-sm">
-            &copy; 2025 NetGroup. Todos os direitos reservados.
+            &copy; 2025 GestaoRH. Todos os direitos reservados.
           </p>
         </div>
       </footer>
