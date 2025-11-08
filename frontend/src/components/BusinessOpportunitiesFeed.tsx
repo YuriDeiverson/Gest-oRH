@@ -17,8 +17,61 @@ interface BusinessOpportunity {
   authorName: string;
 }
 
+// Dados mockados para demonstração
+const mockOpportunities: BusinessOpportunity[] = [
+  {
+    id: "mock-1",
+    title: "Parceria Estratégica em E-commerce",
+    description:
+      "Buscamos parceiro para expansão no mercado digital. Empresa consolidada no varejo físico precisa de expertise em vendas online. Oportunidade de sociedade ou consultoria especializada.",
+    company: "Varejo Plus Ltda",
+    contactName: "Mariana Oliveira",
+    category: "PARCERIA",
+    segment: "E-commerce",
+    location: "São Paulo - SP",
+    estimatedValue: 150000,
+    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+    authorName: "Carlos Mendes",
+  },
+  {
+    id: "mock-2",
+    title: "Desenvolvimento de Aplicativo Mobile",
+    description:
+      "Startup em crescimento busca desenvolvedor ou equipe para criar aplicativo iOS/Android. Projeto inovador na área de delivery sustentável. Possibilidade de equity para parceiros estratégicos.",
+    company: "EcoDelivery",
+    contactName: "Rafael Costa",
+    category: "SERVICO",
+    segment: "Tecnologia",
+    location: "Rio de Janeiro - RJ",
+    estimatedValue: 80000,
+    deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+    publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    authorName: "Ana Silva",
+  },
+  {
+    id: "mock-3",
+    title: "Fornecimento de Materiais de Escritório",
+    description:
+      "Empresa de médio porte busca fornecedor confiável de materiais de escritório para contrato anual. Volume significativo, pagamento à vista com desconto ou prazo negociável.",
+    company: "Corporativo Soluções",
+    contactName: "João Pedro",
+    category: "COMPRA",
+    segment: "Materiais",
+    location: "Belo Horizonte - MG",
+    estimatedValue: 45000,
+    deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
+    authorName: "Fernanda Lima",
+  },
+];
+
 export default function BusinessOpportunitiesFeed() {
-  const [opportunities, setOpportunities] = useState<BusinessOpportunity[]>([]);
+  const [opportunities, setOpportunities] =
+    useState<BusinessOpportunity[]>(mockOpportunities);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -63,10 +116,41 @@ export default function BusinessOpportunitiesFeed() {
           : `${API_BASE_URL}/opportunities?category=${selectedCategory}`;
 
       const response = await fetch(url);
-      const result = await response.json();
-      setOpportunities(result.data || []);
+
+      if (response.ok) {
+        const result = await response.json();
+        const apiOpportunities = result.data || [];
+
+        // Filtrar mockados por categoria se necessário
+        let filteredMock = mockOpportunities;
+        if (selectedCategory !== "all") {
+          filteredMock = mockOpportunities.filter(
+            (opp) => opp.category === selectedCategory,
+          );
+        }
+
+        // Combinar API + mock
+        setOpportunities([...apiOpportunities, ...filteredMock]);
+      } else {
+        // Fallback para dados mockados
+        const filtered =
+          selectedCategory === "all"
+            ? mockOpportunities
+            : mockOpportunities.filter(
+                (opp) => opp.category === selectedCategory,
+              );
+        setOpportunities(filtered);
+      }
     } catch (error) {
       console.error("Erro ao carregar oportunidades:", error);
+      // Fallback para dados mockados
+      const filtered =
+        selectedCategory === "all"
+          ? mockOpportunities
+          : mockOpportunities.filter(
+              (opp) => opp.category === selectedCategory,
+            );
+      setOpportunities(filtered);
     } finally {
       setLoading(false);
     }

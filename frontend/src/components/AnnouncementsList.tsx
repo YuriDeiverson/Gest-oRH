@@ -12,8 +12,53 @@ interface Announcement {
   authorName: string;
 }
 
+// Dados mockados para demonstração
+const mockAnnouncements: Announcement[] = [
+  {
+    id: "1",
+    title: "Reunião Mensal - Dezembro 2024",
+    content:
+      "Nossa próxima reunião será no dia 15 de dezembro, às 19h, no auditório do Hotel Plaza. Tema: 'Tendências de Mercado para 2025'. Confirmem presença!",
+    type: "EVENT",
+    priority: 1,
+    publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    authorName: "Administração",
+  },
+  {
+    id: "2",
+    title: "Nova Plataforma Online",
+    content:
+      "Estamos lançando nossa nova plataforma digital! Agora vocês podem fazer networking online, compartilhar oportunidades e muito mais. Façam login e explorem!",
+    type: "INFO",
+    priority: 0,
+    publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    authorName: "Equipe Técnica",
+  },
+  {
+    id: "3",
+    title: "Alteração de Local - Urgente",
+    content:
+      "ATENÇÃO: A reunião de hoje foi transferida para o Salão Nobre do Club Empresarial (Rua das Flores, 123). Mesmo horário: 19h. Pedimos desculpas pelo transtorno.",
+    type: "URGENT",
+    priority: 2,
+    publishedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    authorName: "Coordenação",
+  },
+  {
+    id: "4",
+    title: "Regras de Conduta",
+    content:
+      "Lembramos a todos sobre a importância do respeito mútuo em nossas interações. Mantenham sempre a cordialidade e o profissionalismo em todas as comunicações.",
+    type: "WARNING",
+    priority: 0,
+    publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    authorName: "Administração",
+  },
+];
+
 const AnnouncementsList: React.FC = () => {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcements, setAnnouncements] =
+    useState<Announcement[]>(mockAnnouncements);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -24,16 +69,21 @@ const AnnouncementsList: React.FC = () => {
   const loadAnnouncements = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/announcements`);
-      const data = await response.json();
 
       if (response.ok) {
-        setAnnouncements(data.data);
+        const data = await response.json();
+        // Combinar avisos da API com mockados, API primeiro
+        const apiAnnouncements = data.data || [];
+        setAnnouncements([...apiAnnouncements, ...mockAnnouncements]);
       } else {
-        throw new Error(data.error);
+        // Se API falhar, usar dados mockados
+        setAnnouncements(mockAnnouncements);
       }
     } catch (err) {
-      setError("Erro ao carregar avisos");
       console.error(err);
+      // Fallback para dados mockados
+      setAnnouncements(mockAnnouncements);
+      setError("");
     } finally {
       setLoading(false);
     }

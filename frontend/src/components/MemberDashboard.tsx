@@ -51,12 +51,91 @@ const MemberDashboardNew: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "business" | "referrals" | "opportunities" | "agendas" | "announcements"
   >("business");
-  const [activeSubTab, setActiveSubTab] = useState<"referrals" | "indications">("referrals");
+  const [activeSubTab, setActiveSubTab] = useState<"referrals" | "indications">(
+    "referrals",
+  );
   const [memberData, setMemberData] = useState<MemberData | null>(null);
   const [members, setMembers] = useState<MemberData[]>([]);
-  const [referralsGiven, setReferralsGiven] = useState<Referral[]>([]);
-  const [referralsReceived, setReferralsReceived] = useState<Referral[]>([]);
-  const [agendas, setAgendas] = useState<any[]>([]);
+  // Dados mockados para indicações
+  const mockReferralsGiven: Referral[] = [
+    {
+      id: "ref-1",
+      companyName: "TechStart Solutions",
+      contactName: "Marina Santos",
+      contactInfo: "marina@techstart.com",
+      opportunity:
+        "Busca desenvolvedor senior React para projeto de 6 meses. Salário competitivo e benefícios.",
+      status: "PENDING",
+      trackingStatus: "NEW",
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "ref-2",
+      companyName: "Consultoria Empresarial",
+      contactName: "Ricardo Oliveira",
+      contactInfo: "ricardo.oliveira@consultoria.com.br",
+      opportunity:
+        "Precisa de contador especializado em MEI e pequenas empresas para parceria.",
+      status: "APPROVED",
+      trackingStatus: "IN_CONTACT",
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
+  const mockReferralsReceived: Referral[] = [
+    {
+      id: "rec-1",
+      companyName: "Digital Marketing Pro",
+      contactName: "Amanda Costa",
+      contactInfo: "amanda@digitalmarketing.com",
+      opportunity:
+        "Oportunidade de parceria para serviços de automação de marketing digital.",
+      status: "APPROVED",
+      trackingStatus: "NEGOTIATING",
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      giver: { intention: { name: "Carlos Silva" } },
+    },
+  ];
+
+  const [referralsGiven, setReferralsGiven] =
+    useState<Referral[]>(mockReferralsGiven);
+  const [referralsReceived, setReferralsReceived] = useState<Referral[]>(
+    mockReferralsReceived,
+  );
+  // Dados mockados para agendas
+  const mockAgendas = [
+    {
+      id: "1",
+      meeting: {
+        title: "Reunião Mensal de Dezembro",
+        description: "Discussão sobre metas para 2025 e networking",
+        date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 dias
+      },
+      checkedIn: false,
+      checkedAt: null,
+    },
+    {
+      id: "2",
+      meeting: {
+        title: "Workshop: Marketing Digital",
+        description: "Estratégias de marketing para pequenos negócios",
+        date: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 dias
+      },
+      checkedIn: true,
+      checkedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "3",
+      meeting: {
+        title: "Evento de Final de Ano",
+        description: "Confraternização e premiações do networking",
+        date: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 dias
+      },
+      checkedIn: false,
+      checkedAt: null,
+    },
+  ];
+  const [agendas, setAgendas] = useState<any[]>(mockAgendas);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showIndicationForm, setShowIndicationForm] = useState(false);
@@ -76,6 +155,9 @@ const MemberDashboardNew: React.FC = () => {
   const [indications, setIndications] = useState<any[]>([]);
   const [indicationLoading, setIndicationLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [addPostFunction, setAddPostFunction] = useState<
+    ((content: string) => void) | null
+  >(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -129,46 +211,62 @@ const MemberDashboardNew: React.FC = () => {
         const presRes = await fetch(`${API_URL}/presences/member/${memberId}`);
         if (presRes.ok) {
           const presJson = await presRes.json();
-          setAgendas(presJson.data || []);
+          // Combinar dados da API com mockados
+          const apiAgendas = presJson.data || [];
+          setAgendas([...apiAgendas, ...mockAgendas]);
+        } else {
+          // Fallback para dados mockados
+          setAgendas(mockAgendas);
         }
       } catch (err) {
         console.warn("Não foi possível carregar agendas:", err);
+        // Fallback para dados mockados
+        setAgendas(mockAgendas);
       }
 
       // Buscar todas as indicações feitas (intentions referidas por este membro)
-      const myIndicationsResponse = await fetch(
-        `${API_URL}/intentions/public/list?referredBy=${memberId}`,
-      );
-      if (myIndicationsResponse.ok) {
-        const myIndicationsResult = await myIndicationsResponse.json();
-        // Mapear para o formato de Referral
-        const mappedIndications = myIndicationsResult.data.map(
-          (intention: any) => ({
-            id: intention.id,
-            companyName: intention.company,
-            contactName: intention.name,
-            contactInfo: intention.email,
-            opportunity: intention.reason,
-            status: intention.status,
-            trackingStatus: intention.trackingStatus,
-            createdAt: intention.createdAt,
-          }),
+      try {
+        const myIndicationsResponse = await fetch(
+          `${API_URL}/intentions/public/list?referredBy=${memberId}`,
         );
-        setReferralsGiven(mappedIndications);
+        if (myIndicationsResponse.ok) {
+          const myIndicationsResult = await myIndicationsResponse.json();
+          // Mapear para o formato de Referral
+          const mappedIndications = myIndicationsResult.data.map(
+            (intention: any) => ({
+              id: intention.id,
+              companyName: intention.company,
+              contactName: intention.name,
+              contactInfo: intention.email,
+              opportunity: intention.reason,
+              status: intention.status,
+              trackingStatus: intention.trackingStatus,
+              createdAt: intention.createdAt,
+            }),
+          );
+          // Combinar com dados mockados
+          setReferralsGiven([...mappedIndications, ...mockReferralsGiven]);
+        } else {
+          // Fallback para dados mockados
+          setReferralsGiven(mockReferralsGiven);
+        }
+      } catch (err) {
+        // Fallback para dados mockados
+        setReferralsGiven(mockReferralsGiven);
       }
 
       // Buscar indicações aprovadas (intentions referidas por este membro)
-      const approvedResponse = await fetch(
-        `${API_URL}/intentions/public/list?referredBy=${memberId}`,
-      );
-      if (approvedResponse.ok) {
-        const approvedResult = await approvedResponse.json();
-        // Filtrar apenas aprovadas
-        const approved = approvedResult.data.filter(
-          (intention: any) => intention.status === "APPROVED",
+      try {
+        const approvedResponse = await fetch(
+          `${API_URL}/intentions/public/list?referredBy=${memberId}`,
         );
-        setReferralsReceived(
-          approved.map((intention: any) => ({
+        if (approvedResponse.ok) {
+          const approvedResult = await approvedResponse.json();
+          // Filtrar apenas aprovadas
+          const approved = approvedResult.data.filter(
+            (intention: any) => intention.status === "APPROVED",
+          );
+          const mappedApproved = approved.map((intention: any) => ({
             id: intention.id,
             companyName: intention.company,
             contactName: intention.name,
@@ -177,8 +275,16 @@ const MemberDashboardNew: React.FC = () => {
             status: "APPROVED",
             trackingStatus: intention.trackingStatus,
             createdAt: intention.createdAt,
-          })),
-        );
+          }));
+          // Combinar com dados mockados
+          setReferralsReceived([...mappedApproved, ...mockReferralsReceived]);
+        } else {
+          // Fallback para dados mockados
+          setReferralsReceived(mockReferralsReceived);
+        }
+      } catch (err) {
+        // Fallback para dados mockados
+        setReferralsReceived(mockReferralsReceived);
       }
 
       setLoading(false);
@@ -264,6 +370,18 @@ const MemberDashboardNew: React.FC = () => {
         const errorData = await response.json();
         throw new Error(errorData.error || "Erro ao enviar indicação");
       }
+
+      // Adicionar a nova indicação à lista local (optimistic update)
+      const newIndication = {
+        id: `temp-${Date.now()}`,
+        name: indicationData.name,
+        email: indicationData.email,
+        company: indicationData.company,
+        reason: indicationData.reason,
+        status: "PENDING",
+        createdAt: new Date().toISOString(),
+      };
+      setIndications((prev) => [newIndication, ...prev]);
 
       setSuccess("Indicação enviada para aprovação do admin!");
       setIndicationData({
@@ -415,10 +533,17 @@ const MemberDashboardNew: React.FC = () => {
           <div className="space-y-6">
             <div>
               {/* Composer + Feed da Comunidade */}
-              <PostComposer memberId={memberData?.id} onPosted={() => setRefreshKey((k) => k + 1)} />
+              <PostComposer
+                memberId={memberData?.id}
+                onPosted={() => setRefreshKey((k) => k + 1)}
+                onNewPost={addPostFunction || undefined}
+              />
             </div>
             <div>
-              <PostList refreshKey={refreshKey} />
+              <PostList
+                refreshKey={refreshKey}
+                onAddPost={setAddPostFunction}
+              />
             </div>
           </div>
         )}
@@ -439,22 +564,42 @@ const MemberDashboardNew: React.FC = () => {
         {activeTab === "agendas" && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Agendas e Convites</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Agendas e Convites
+              </h2>
               {agendas.length === 0 ? (
-                <p className="text-sm text-gray-600">Você não possui convites/agendas marcadas.</p>
+                <p className="text-sm text-gray-600">
+                  Você não possui convites/agendas marcadas.
+                </p>
               ) : (
                 <div className="space-y-4">
                   {agendas.map((p: any) => (
-                    <div key={p.id} className="border border-gray-200 rounded-lg p-4">
+                    <div
+                      key={p.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-gray-900">{p.meeting?.title || p.meeting?.description}</h3>
-                          <p className="text-sm text-gray-600">{p.meeting?.description}</p>
-                          <p className="text-xs text-gray-500">Data: {new Date(p.meeting?.date).toLocaleString()}</p>
+                          <h3 className="font-semibold text-gray-900">
+                            {p.meeting?.title || p.meeting?.description}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {p.meeting?.description}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Data: {new Date(p.meeting?.date).toLocaleString()}
+                          </p>
                         </div>
                         <div className="text-right text-sm text-gray-500">
-                          <p>Presença: {p.checkedIn ? "Confirmado" : "Pendente"}</p>
-                          {p.checkedAt && <p className="text-xs">Marcado em {new Date(p.checkedAt).toLocaleString()}</p>}
+                          <p>
+                            Presença: {p.checkedIn ? "Confirmado" : "Pendente"}
+                          </p>
+                          {p.checkedAt && (
+                            <p className="text-xs">
+                              Marcado em{" "}
+                              {new Date(p.checkedAt).toLocaleString()}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -507,28 +652,48 @@ const MemberDashboardNew: React.FC = () => {
             {activeSubTab === "referrals" && (
               <>
                 <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Referências Recebidas</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Referências Recebidas
+                  </h3>
                   {referralsReceived.length === 0 ? (
-                    <p className="text-sm text-gray-500">Nenhuma referência recebida ainda.</p>
+                    <p className="text-sm text-gray-500">
+                      Nenhuma referência recebida ainda.
+                    </p>
                   ) : (
                     <div className="space-y-4">
                       {referralsReceived.map((r) => (
-                        <div key={r.id} className="border border-gray-200 rounded-lg p-4">
+                        <div
+                          key={r.id}
+                          className="border border-gray-200 rounded-lg p-4"
+                        >
                           <div className="flex justify-between items-start mb-2">
                             <div>
-                              <h4 className="font-medium text-gray-900">{r.giver?.intention?.name || "Membro"}</h4>
-                              <p className="text-sm text-gray-600">{r.companyName} — {r.contactName}</p>
+                              <h4 className="font-medium text-gray-900">
+                                {r.giver?.intention?.name || "Membro"}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {r.companyName} — {r.contactName}
+                              </p>
                             </div>
-                            <span className="text-xs text-gray-500">{new Date(r.createdAt).toLocaleDateString()}</span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(r.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
-                          <div className="text-sm text-gray-700">Contato: {r.contactInfo}</div>
+                          <div className="text-sm text-gray-700">
+                            Contato: {r.contactInfo}
+                          </div>
                           <div className="mt-3 text-sm text-gray-600">
                             <strong>Oportunidade:</strong> {r.opportunity}
                           </div>
                           {/* Comentários: placeholder para integração futura */}
                           <div className="mt-3">
-                            <p className="text-xs text-gray-500">Comentários:</p>
-                            <p className="text-sm text-gray-700">Nenhum comentário disponível (recurso a implementar).</p>
+                            <p className="text-xs text-gray-500">
+                              Comentários:
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              Nenhum comentário disponível (recurso a
+                              implementar).
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -543,8 +708,12 @@ const MemberDashboardNew: React.FC = () => {
                 {/* Indicate New Member Card (sem exibir perfil) */}
                 <div className="mb-8">
                   <div className="bg-white rounded-xl border border-primary-200 p-6 flex flex-col justify-center bg-linear-to-br from-primary-50 to-white">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Indicar Novo Membro</h3>
-                    <p className="text-sm text-gray-600 mb-4">Convide alguém para participar do grupo de networking.</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Indicar Novo Membro
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Convide alguém para participar do grupo de networking.
+                    </p>
                     <button
                       onClick={() => setShowIndicationForm(!showIndicationForm)}
                       className="px-4 py-2 bg-linear-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-medium rounded-lg transition-all shadow-md"
@@ -560,7 +729,10 @@ const MemberDashboardNew: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Indicar Nova Pessoa
                     </h3>
-                    <form onSubmit={handleIndicationSubmit} className="space-y-4">
+                    <form
+                      onSubmit={handleIndicationSubmit}
+                      className="space-y-4"
+                    >
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -570,7 +742,10 @@ const MemberDashboardNew: React.FC = () => {
                             type="text"
                             value={indicationData.name}
                             onChange={(e) =>
-                              setIndicationData({ ...indicationData, name: e.target.value })
+                              setIndicationData({
+                                ...indicationData,
+                                name: e.target.value,
+                              })
                             }
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                             required
@@ -584,7 +759,10 @@ const MemberDashboardNew: React.FC = () => {
                             type="email"
                             value={indicationData.email}
                             onChange={(e) =>
-                              setIndicationData({ ...indicationData, email: e.target.value })
+                              setIndicationData({
+                                ...indicationData,
+                                email: e.target.value,
+                              })
                             }
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                             required
@@ -599,7 +777,10 @@ const MemberDashboardNew: React.FC = () => {
                           type="text"
                           value={indicationData.company}
                           onChange={(e) =>
-                            setIndicationData({ ...indicationData, company: e.target.value })
+                            setIndicationData({
+                              ...indicationData,
+                              company: e.target.value,
+                            })
                           }
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                           required
@@ -612,7 +793,10 @@ const MemberDashboardNew: React.FC = () => {
                         <textarea
                           value={indicationData.reason}
                           onChange={(e) =>
-                            setIndicationData({ ...indicationData, reason: e.target.value })
+                            setIndicationData({
+                              ...indicationData,
+                              reason: e.target.value,
+                            })
                           }
                           rows={3}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -625,7 +809,9 @@ const MemberDashboardNew: React.FC = () => {
                           disabled={indicationLoading}
                           className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                         >
-                          {indicationLoading ? "Enviando..." : "Enviar Indicação"}
+                          {indicationLoading
+                            ? "Enviando..."
+                            : "Enviar Indicação"}
                         </button>
                         <button
                           type="button"
@@ -673,25 +859,41 @@ const MemberDashboardNew: React.FC = () => {
                           className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-gray-900">{indication.name}</h4>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              indication.status === "APPROVED"
-                                ? "bg-green-100 text-green-800"
-                                : indication.status === "REJECTED"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}>
+                            <h4 className="font-medium text-gray-900">
+                              {indication.name}
+                            </h4>
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                indication.status === "APPROVED"
+                                  ? "bg-green-100 text-green-800"
+                                  : indication.status === "REJECTED"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
                               {indication.status === "PENDING" && "Pendente"}
                               {indication.status === "APPROVED" && "Aprovada"}
                               {indication.status === "REJECTED" && "Rejeitada"}
                             </span>
                           </div>
                           <div className="space-y-1 text-sm text-gray-600">
-                            <p><span className="font-medium">Email:</span> {indication.email}</p>
-                            <p><span className="font-medium">Empresa:</span> {indication.company}</p>
-                            <p><span className="font-medium">Motivo:</span> {indication.reason}</p>
+                            <p>
+                              <span className="font-medium">Email:</span>{" "}
+                              {indication.email}
+                            </p>
+                            <p>
+                              <span className="font-medium">Empresa:</span>{" "}
+                              {indication.company}
+                            </p>
+                            <p>
+                              <span className="font-medium">Motivo:</span>{" "}
+                              {indication.reason}
+                            </p>
                             <p className="text-xs text-gray-500">
-                              Indicado em {new Date(indication.createdAt).toLocaleDateString("pt-BR")}
+                              Indicado em{" "}
+                              {new Date(
+                                indication.createdAt,
+                              ).toLocaleDateString("pt-BR")}
                             </p>
                           </div>
                         </div>

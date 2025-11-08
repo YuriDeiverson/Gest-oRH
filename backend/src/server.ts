@@ -8,6 +8,7 @@ import announcementRoutes from "./routes/announcement.routes";
 import businessOpportunityRoutes from "./routes/businessOpportunity.routes";
 import presenceRoutes from "./routes/presence.routes";
 import postRoutes from "./routes/post.routes";
+import adminRoutes from "./routes/admin.routes";
 import { errorHandler } from "./middleware/errorHandler";
 
 dotenv.config();
@@ -85,6 +86,7 @@ app.get("/health", (req, res) => {
 });
 
 // Routes
+app.use("/api/admin", adminRoutes);
 app.use("/api/intentions", intentionRoutes);
 app.use("/api/members", memberRoutes);
 app.use("/api/referrals", referralRoutes);

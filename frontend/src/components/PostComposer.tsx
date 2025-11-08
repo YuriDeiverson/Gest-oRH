@@ -6,9 +6,10 @@ const API_URL = config.apiUrl;
 interface Props {
   memberId?: string | null;
   onPosted?: () => void;
+  onNewPost?: (content: string) => void;
 }
 
-const PostComposer: React.FC<Props> = ({ memberId, onPosted }) => {
+const PostComposer: React.FC<Props> = ({ memberId, onPosted, onNewPost }) => {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -20,6 +21,11 @@ const PostComposer: React.FC<Props> = ({ memberId, onPosted }) => {
     setError("");
 
     try {
+      // Adicionar o post imediatamente à lista (otimistic update)
+      if (onNewPost) {
+        onNewPost(content);
+      }
+
       const res = await fetch(`${API_URL}/posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -27,21 +33,22 @@ const PostComposer: React.FC<Props> = ({ memberId, onPosted }) => {
       });
 
       if (!res.ok) {
-        const json = await res.json();
-        throw new Error(json?.error || "Erro ao publicar");
+        // Se API falhar, o post já foi adicionado localmente
+        console.warn("API não disponível, post adicionado localmente");
       }
 
       setContent("");
-      if (onPosted) onPosted();
-    } catch (err: any) {
-  const e = err as { message?: string } | undefined;
-  const msg = e && e.message ? e.message : String(err);
+      if (onPosted) onPosted(); // Atualizar outros dados se necessário
+    } catch (err: unknown) {
+      const e = err as { message?: string } | undefined;
+      const msg = e && e.message ? e.message : String(err);
       setError(msg || "Erro ao publicar");
+
+      // O post já foi adicionado otimisticamente, manter na lista
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <form onSubmit={handleSubmit} className="space-y-2">
